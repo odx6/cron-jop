@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Configuración de la base de datos
+DB_HOST="localhost"
+DB_USER="nombre_usuario"
+DB_PASSWORD="tu_contraseña"
+DB_NAME="nombre_base_de_datos"
+
+# Nombre del archivo de copia de seguridad
+BACKUP_FILE="copia_de_seguridad_$(date +'%Y-%m-%d_%H-%M-%S').sql"
+BACKUP_ZIP_FILE="$BACKUP_FILE.gz"
+
+# Crear la copia de seguridad y comprimirla
+mysqldump -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME > $BACKUP_FILE
+gzip $BACKUP_FILE
+
+# Verificar si la copia de seguridad fue creada exitosamente
+if [ ! -f "$BACKUP_ZIP_FILE" ]; then
+    echo "Error: No se pudo crear la copia de seguridad."
+    exit 1
+fi
+
+# Configuración del correo
+TO="destinatario@correo.com"
+SUBJECT="Copia de Seguridad de la Base de Datos"
+BODY="Adjunto encontrarás la copia de seguridad de la base de datos."
+ATTACHMENT="$BACKUP_ZIP_FILE"
+
+# Enviar el correo con el archivo adjunto
+echo "$BODY" | mail -s "$SUBJECT" -a "$ATTACHMENT" "$TO"
+
+# Verificar si el correo fue enviado exitosamente
+if [ $? -eq 0 ]; then
+    echo "Copia de seguridad enviada exitosamente a $TO."
+else
+    echo "Error: No se pudo enviar la copia de seguridad por correo."
+    exit 1
+fi
